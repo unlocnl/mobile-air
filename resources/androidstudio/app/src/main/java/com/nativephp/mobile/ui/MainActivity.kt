@@ -9,6 +9,8 @@ import android.os.Handler
 import android.util.Log
 import android.webkit.CookieManager
 import androidx.fragment.app.FragmentActivity
+import android.os.Build
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.compose.setContent
 import com.nativephp.mobile.bridge.PHPBridge
 import com.nativephp.mobile.bridge.PHPQueueWorker
@@ -70,6 +72,9 @@ class MainActivity : FragmentActivity(), WebViewProvider {
     // Status bar style configuration - replaced during build
     private val statusBarStyle = "REPLACE_STATUS_BAR_STYLE"
 
+    // Splash style configuration - replaced during build
+    private val splashStyle = "REPLACE_SPLASH_STYLE"
+
     companion object {
         // Static instance holder for accessing MainActivity from other activities
         var instance: MainActivity? = null
@@ -77,7 +82,12 @@ class MainActivity : FragmentActivity(), WebViewProvider {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Hold the system splash until ready only in native style on API 31+
+        if (splashStyle == "native" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            splashScreen.setKeepOnScreenCondition { showSplash }
+        }
         instance = this
 
         // Android 15 edge-to-edge compatibility fix
@@ -898,9 +908,10 @@ class MainActivity : FragmentActivity(), WebViewProvider {
                 }
             )
 
-            // Splash overlay with fade animation (full screen, no insets)
+            // Full-bleed overlay in image style, or as a fallback below API 31
+            val useOverlay = splashStyle == "image" || Build.VERSION.SDK_INT < Build.VERSION_CODES.S
             AnimatedVisibility(
-                visible = showSplash,
+                visible = showSplash && useOverlay,
                 exit = fadeOut(animationSpec = tween(300))
             ) {
                 SplashScreen()

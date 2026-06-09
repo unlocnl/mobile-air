@@ -29,6 +29,13 @@ class InstallsAndroidSplashScreenTest extends TestCase
         File::makeDirectory($this->publicPath, 0755, true);
         File::makeDirectory($this->androidResPath, 0755, true);
 
+        // Mirror reality: a placeholder splash.xml ships in the template's drawable/
+        File::makeDirectory($this->androidResPath.'/drawable', 0755, true);
+        File::put(
+            $this->androidResPath.'/drawable/splash.xml',
+            '<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="1dp" android:height="1dp" android:viewportWidth="1" android:viewportHeight="1"><path android:fillColor="#00000000" android:pathData="M0,0h1v1h-1z" /></vector>'
+        );
+
         // Set up base path for testing
         app()->setBasePath($this->testProjectPath);
     }
@@ -219,6 +226,27 @@ class InstallsAndroidSplashScreenTest extends TestCase
             $darkPath = $this->androidResPath."/drawable-night-{$density}/splash.png";
             $this->assertFileDoesNotExist($darkPath, "Dark mode splash should not exist for {$density} (invalid image)");
         }
+    }
+
+    public function test_app_icon_fallback_when_no_splash()
+    {
+        // no splash.* provided
+        $this->installAndroidSplashScreen();
+
+        // Placeholder removed, PNG written — no AAPT2 duplicate
+        $this->assertFileExists($this->androidResPath.'/drawable/splash.png');
+        $this->assertFileDoesNotExist($this->androidResPath.'/drawable/splash.xml');
+    }
+
+    public function test_png_path_removes_placeholder_xml()
+    {
+        $this->createTestSplashImage();
+
+        $this->installAndroidSplashScreen();
+
+        // Density PNGs written; placeholder xml in drawable/ must be gone
+        $this->assertFileDoesNotExist($this->androidResPath.'/drawable/splash.xml');
+        $this->assertFileExists($this->androidResPath.'/drawable-mdpi/splash.png');
     }
 
     /**

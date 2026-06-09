@@ -262,6 +262,29 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | Android Splash Screen
+        |--------------------------------------------------------------------------
+        |
+        | style:            'image'  - keep the full-bleed Compose splash overlay
+        |                              (current behavior; default).
+        |                   'native' - rely solely on the held system splash
+        |                              (icon-on-background, jump-free) on API 31+.
+        | background:       Splash window background color (light). Hex #RRGGBB or
+        |                   #AARRGGBB. Wrap in quotes in .env ('#' starts a comment).
+        | background_night: Splash window background color (dark mode).
+        |
+        | Provide public/splash.png (and optional public/splash-dark.png). On API < 31
+        | the full-bleed overlay is always used as a fallback regardless of style.
+        |
+        */
+        'splash' => [
+            'style' => env('NATIVEPHP_ANDROID_SPLASH_STYLE', 'image'),
+            'background' => env('NATIVEPHP_ANDROID_SPLASH_BACKGROUND', '#FFFFFF'),
+            'background_night' => env('NATIVEPHP_ANDROID_SPLASH_BACKGROUND_NIGHT', '#000000'),
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
         | Android Build Configuration
         |--------------------------------------------------------------------------
         |

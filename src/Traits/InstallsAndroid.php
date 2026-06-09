@@ -66,12 +66,14 @@ trait InstallsAndroid
         $primary = $this->normalizeThemeColor(config('nativephp.android.theme.color_primary') ?: '#000000');
         $primaryNight = $this->normalizeThemeColor(config('nativephp.android.theme.color_primary_night') ?: '#FFFFFF');
         $onPrimary = $this->normalizeThemeColor(config('nativephp.android.theme.color_on_primary') ?: '#FFFFFF');
+        $splashBg = $this->normalizeThemeColor(config('nativephp.android.splash.background') ?: '#FFFFFF');
+        $splashBgNight = $this->normalizeThemeColor(config('nativephp.android.splash.background_night') ?: '#000000');
 
         File::ensureDirectoryExists(dirname($valuesNightPath));
 
-        $this->components->task('Applying Android theme', function () use ($valuesPath, $valuesNightPath, $primary, $primaryNight, $onPrimary) {
-            File::put($valuesPath, $this->renderThemeXml($primary, $onPrimary));
-            File::put($valuesNightPath, $this->renderThemeXml($primaryNight, $onPrimary));
+        $this->components->task('Applying Android theme', function () use ($valuesPath, $valuesNightPath, $primary, $primaryNight, $onPrimary, $splashBg, $splashBgNight) {
+            File::put($valuesPath, $this->renderThemeXml($primary, $onPrimary, $splashBg));
+            File::put($valuesNightPath, $this->renderThemeXml($primaryNight, $onPrimary, $splashBgNight));
 
             return true;
         });
@@ -89,7 +91,7 @@ trait InstallsAndroid
         return '#'.(strlen($hex) === 6 ? 'FF'.$hex : $hex);
     }
 
-    private function renderThemeXml(string $primary, string $onPrimary): string
+    private function renderThemeXml(string $primary, string $onPrimary, string $splashBackground): string
     {
         return <<<XML
             <?xml version="1.0" encoding="utf-8"?>
@@ -100,11 +102,17 @@ trait InstallsAndroid
                     <item name="colorOnPrimary">{$onPrimary}</item>
                     <item name="colorAccent">{$primary}</item>
                     <item name="android:colorAccent">{$primary}</item>
+                    <item name="android:windowBackground">{$splashBackground}</item>
                     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
                     <item name="android:statusBarColor">@android:color/transparent</item>
                     <item name="android:navigationBarColor">@android:color/transparent</item>
                     <item name="android:enforceStatusBarContrast">false</item>
                     <item name="android:enforceNavigationBarContrast">false</item>
+                </style>
+                <style name="Theme.AndroidPHP.Splash" parent="Theme.SplashScreen">
+                    <item name="windowSplashScreenBackground">{$splashBackground}</item>
+                    <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+                    <item name="postSplashScreenTheme">@style/Theme.AndroidPHP</item>
                 </style>
             </resources>
 

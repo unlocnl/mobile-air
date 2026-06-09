@@ -8,6 +8,10 @@ trait InstallsSplashScreen
 {
     public function installIosSplashScreen()
     {
+        if ($this->installIosSvgSplash()) {
+            return;
+        }
+
         // Define supported splash screen variants
         $splashVariants = [
             'splash.png' => ['filename' => 'splash.png', 'idiom' => 'universal'],
@@ -145,5 +149,59 @@ trait InstallsSplashScreen
         imagedestroy($image);
 
         return true;
+    }
+
+    private function installIosSvgSplash(): bool
+    {
+        $svgPath = public_path('splash.svg');
+        if (! File::exists($svgPath) || ! $this->isValidSvg($svgPath)) {
+            return false;
+        }
+
+        $launchImageDir = base_path('nativephp/ios/NativePHP/Assets.xcassets/LaunchImage.imageset');
+        File::ensureDirectoryExists($launchImageDir);
+
+        $images = [['idiom' => 'universal', 'filename' => 'splash.svg']];
+        @copy($svgPath, $launchImageDir.'/splash.svg');
+
+        $darkSvg = public_path('splash-dark.svg');
+        if (File::exists($darkSvg) && $this->isValidSvg($darkSvg)) {
+            @copy($darkSvg, $launchImageDir.'/splash-dark.svg');
+            $images[] = [
+                'idiom' => 'universal',
+                'filename' => 'splash-dark.svg',
+                'appearances' => [['appearance' => 'luminosity', 'value' => 'dark']],
+            ];
+        }
+
+        $contentsJson = [
+            'images' => $images,
+            'info' => ['author' => 'xcode', 'version' => 1],
+            'properties' => [
+                'pre-rendered' => true,
+                'preserves-vector-representation' => true,
+            ],
+        ];
+
+        File::put(
+            $launchImageDir.'/Contents.json',
+            json_encode($contentsJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        return true;
+    }
+
+    private function isValidSvg(string $path): bool
+    {
+        $contents = @file_get_contents($path);
+        if ($contents === false || trim($contents) === '') {
+            return false;
+        }
+
+        $previous = libxml_use_internal_errors(true);
+        $doc = simplexml_load_string($contents);
+        libxml_use_internal_errors($previous);
+
+        return $doc !== false && strtolower($doc->getName()) === 'svg';
     }
 }

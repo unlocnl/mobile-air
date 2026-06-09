@@ -9,7 +9,7 @@ use Symfony\Component\Process\Process as SymfonyProcess;
 
 trait PreparesBuild
 {
-    use CleansEnvFile, InstallsAndroidSplashScreen, InstallsAppIcon, PlatformFileOperations;
+    use CleansEnvFile, InstallsAndroidSplashScreen, InstallsAppIcon, PlatformFileOperations, UpdatesSplashConfiguration;
 
     /**
      * Validate required environment variables for building
@@ -154,6 +154,11 @@ trait PreparesBuild
 
             $this->logToFile('  Updating status bar style: '.config('nativephp.android.status_bar_style', 'auto'));
             $this->updateStatusBarStyleConfiguration();
+
+            $this->logToFile('  Updating splash style: '.config('nativephp.android.splash.style', 'image'));
+            $this->updateSplashStyleConfiguration();
+            $this->updateSplashThemeIcon();
+            $this->updateSplashThemeBackground();
 
             $this->logToFile('  Updating local properties...');
             $sdkPath = config('nativephp.android.android_sdk_path');
